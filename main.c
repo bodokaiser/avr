@@ -3,15 +3,13 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-int main() {
-    DDRC = 0xff;
+int main(void) {
+    DDRB = (1 << PB0);
 
     while (1) {
-        PORTC = 0xff;
-        _delay_ms(1000);
+        PORTB ^= (1 << PB0);
 
-        PORTC = 0x00;
-        _delay_ms(1000);
+        _delay_ms(2000);
     }
 
     return 0;
