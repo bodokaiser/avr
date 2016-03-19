@@ -1,48 +1,53 @@
-#include <stdbool.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-volatile bool status = true;
+#define COUNT 5
+
+volatile uint8_t value  = 0;
+volatile uint8_t count  = 0;
+volatile uint8_t toggle = 0;
+volatile uint8_t status = 1;
 
 int main(void) {
-    /* use PA0, PB0, PD0 as output GPIO */
-    DDRA = (1 << PA0);
-    DDRB = (1 << PB0);
-    DDRD = (1 << PD0) | (1 << PD3);
+    DDRB  |=  (1 << PB0);
+    DDRC  &= ~(1 << PC0);
+    PORTC |=  (1 << PC0);
 
-    /* set PA0 low, PB0 high */
-    PORTA &= (1 << PA0);
-    PORTB |= (1 << PB0);
-    PORTD |= (1 << PD3);
+    TIMSK  |= (1 << TOIE0) | (1 << TOIE1);
+    TCCR0  |= (1 << CS00)  | (1 << CS01);
+    TCCR1B |= (1 << CS11);
 
-    /* enable external interrupt */
-    GICR = (1 << INT1);
-    /* trigger interrupt on high */
-    MCUCR |= (1 << ISC10);
-    MCUCR |= (1 << ISC11);
-
-    /* enable overflow interrupt */
-    TIMSK = (1 << TOIE0);
-    /* set prescale to 1024 */
-    TCCR0 = (1 << CS02) | (1 << CS00);
-
-    /* enable interrupts */
     sei();
 
     for (;;) {
-        /* do nothing */
+        if (toggle) {
+            status = 1 - status;
+            toggle = 0;
+
+            PORTB &= ~(1 << PB0);
+        }
     }
 
     return 0;
 }
 
-ISR (INT1_vect) {
-    status = !status;    
+ISR (TIMER0_OVF_vect) {
+    uint8_t v = !(PINC & (1 << PC0));
+
+    if (value == v) {
+        count = 0;
+        value = v;
+
+        return;
+    }
+
+    if (COUNT == ++count) {
+        toggle = 1;
+    }
 }
 
-ISR (TIMER0_OVF_vect) {
+ISR (TIMER1_OVF_vect) {
     if (status) {
-        /* toggle PD0 */
-        PORTD ^= (1 << PD0);
+        PORTB ^= (1 << PB0);
     }
 }
