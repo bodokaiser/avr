@@ -1,6 +1,8 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#define COUNT 5
+
 volatile uint8_t value  = 0;
 volatile uint8_t count  = 0;
 volatile uint8_t toggle = 0;
@@ -27,17 +29,16 @@ int main(void) {
 }
 
 ISR (TIMER0_OVF_vect) {
-    if (!(PINC & (1 << PC0))) {
-        toggle = 1;
+    uint8_t v = !(PINC & (1 << PC0));
+
+    if (value == v) {
+        count = 0;
+        value = v;
+
+        return;
     }
 
-    /*
-    if (PINC & (1 << PC0)) {
-        // button release
-        PORTB &= ~(1 << PB0);
-    } else {
-        // button press
-        PORTB |= (1 << PB0);
+    if (COUNT == ++count) {
+        toggle = 1;
     }
-    */
 }
