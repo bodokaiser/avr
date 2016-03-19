@@ -8,17 +8,18 @@ int main(void) {
     /* use PA0, PB0, PD0 as output GPIO */
     DDRA = (1 << PA0);
     DDRB = (1 << PB0);
-    DDRD = (1 << PD0) | (1 << PD2);
+    DDRD = (1 << PD0) | (1 << PD3);
 
     /* set PA0 low, PB0 high */
     PORTA &= (1 << PA0);
     PORTB |= (1 << PB0);
-    PORTD |= (1 << PD2);
+    PORTD |= (1 << PD3);
 
     /* enable external interrupt */
-    GICR = (1 << INT0);
+    GICR = (1 << INT1);
     /* trigger interrupt on high */
-    MCUCR = (1 << ISC01) | 1 << ISC00;
+    MCUCR |= (1 << ISC10);
+    MCUCR |= (1 << ISC11);
 
     /* enable overflow interrupt */
     TIMSK = (1 << TOIE0);
@@ -35,7 +36,7 @@ int main(void) {
     return 0;
 }
 
-ISR (INT0_vect) {
+ISR (INT1_vect) {
     status = !status;    
 }
 
