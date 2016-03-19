@@ -1,111 +1,55 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-volatile uint8_t count = 0x01;
+#include "util.c"
 
-void show() {
-    switch (count) {
-        case 0x0a:
-            count = 0x00;
-        case 0x00:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA4);
-            PORTA |= (1 << PA5);
-            break;
-        case 0x01:
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            break;
-        case 0x02:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA4);
-            PORTA |= (1 << PA6);
-            break;
-        case 0x03:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA6);
-            break;
-        case 0x04:
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA5);
-            PORTA |= (1 << PA6);
-            break;
-        case 0x05:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA5);
-            PORTA |= (1 << PA6);
-            break;
-        case 0x06:
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA4);
-            PORTA |= (1 << PA5);
-            PORTA |= (1 << PA6);
-            break;
-        case 0x07:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            break;
-        case 0x08:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA4);
-            PORTA |= (1 << PA5);
-            PORTA |= (1 << PA6);
-            break;
-        case 0x09:
-            PORTA |= (1 << PA0);
-            PORTA |= (1 << PA1);
-            PORTA |= (1 << PA2);
-            PORTA |= (1 << PA3);
-            PORTA |= (1 << PA5);
-            PORTA |= (1 << PA6);
-            break;
-    }
-}
+#define COUNT 5
 
-int main() {
-    DDRD &= ~(1 << PD2);
-    PORTD |= (1 << PD2);
+volatile uint8_t digit  = 0;
+volatile uint8_t value  = 0;
+volatile uint8_t count  = 0;
+volatile uint8_t toggle = 0;
 
-    /* use PA0, PB0, PD0 as GPIO */
+int main(void) {
     DDRA |= (1 << PA0) | (1 << PA1) | (1 << PA2) | (1 << PA3);
     DDRA |= (1 << PA4) | (1 << PA5) | (1 << PA6);
 
-    /* enable external interrupt */
-    //GICR = (1 << INT0);
-    /* trigger interrupt on high */
-    //MCUCR = (1 << ISC01) | (1 << ISC00);
-    //GIMSK = (1 << INT0);
+    DDRC &= ~(1 << PC0);
+    PORTC |= (1 << PC0);
 
-    /* enable interrupts */
+    TIMSK |= (1 << TOIE0);
+    TCCR0 |= (1 << CS00) | (1 << CS01);
+
     sei();
 
-    show();
+    show(digit);
 
     for (;;) {
-        /* do nothing */
+        if (toggle) {
+            show(++digit);
+
+            if (digit == 0x09) {
+                digit = 0;
+            }
+
+            toggle = 0;
+        }
     }
 
     return 0;
 }
 
-ISR (INT0_vect) {
-    count++;
+ISR (TIMER0_OVF_vect) {
+    uint8_t v = !(PINC & (1 << PC0));
 
-    show();
+    if (value == v) {
+        count = 0;
+        value = v;
+
+        return;
+    }
+
+    if (COUNT == ++count) {
+        toggle = 1;
+    }
 }
