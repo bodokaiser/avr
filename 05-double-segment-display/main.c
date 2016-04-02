@@ -26,19 +26,18 @@ int main(void) {
   TCCR0 |= (1 << CS00) | (1 << CS01);
   sei();
 
-  show1(0x00);
-  show2(0x00);
+  show1(digit);
+  show2(digit);
 
   for (;;) {
     if (toggle) {
       digit++;
 
-      show1(digit);
-      show2(digit);
-
-      if (digit == 0x09) {
+      if (digit == 0x0a) {
         digit = 0;
       }
+      show1(digit);
+      show2(digit);
 
       toggle = 0;
     }
