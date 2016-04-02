@@ -26,18 +26,16 @@ int main(void) {
   TCCR0 |= (1 << CS00) | (1 << CS01);
   sei();
 
-  show1(digit);
-  show2(digit);
+  show(0);
 
   for (;;) {
     if (toggle) {
       digit++;
 
-      if (digit == 0x0a) {
+      if (digit == 100) {
         digit = 0;
       }
-      show1(digit);
-      show2(digit);
+      show(digit);
 
       toggle = 0;
     }
@@ -59,6 +57,11 @@ ISR(TIMER0_OVF_vect) {
   if (COUNT == ++count) {
     toggle = 1;
   }
+}
+
+void show(uint8_t i) {
+  show1(digit % 10);
+  show2(digit / 10 % 10);
 }
 
 void show1(uint8_t count) {

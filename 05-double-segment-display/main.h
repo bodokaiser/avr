@@ -22,6 +22,8 @@
 #define DIS2_F (1 << PC4)
 #define DIS2_G (1 << PC3)
 
+// displays ints > 9
+void show(uint8_t);
 // displays digit on first segment display
 void show1(uint8_t);
 // displays digit on second segment display
